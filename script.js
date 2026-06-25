@@ -1,70 +1,195 @@
-const music = new Audio("music.mp3");
-const audioTurn = new Audio("ting.mp3");
-
-let turn = "X";
-let gameOver = false;
-
 const info = document.querySelector(".info");
 const img = document.querySelector(".image img");
-const boxes = document.querySelectorAll(".box");
-const boxTexts = document.querySelectorAll(".boxtext");
+
+const xScore = document.querySelector("#xScore");
+const oScore = document.querySelector("#oScore");
+const drawScore = document.querySelector("#drawScore");
+
 const resetBtn = document.querySelector("#reset");
+const newGameBtn = document.querySelector("#newGame");
+const soundBtn = document.querySelector("#soundBtn");
+
+let x = 0;
+let o = 0;
+let draw = 0;
+
+let soundOn = true;
+
 
 const wins = [
-  [0, 1, 2],
-  [0, 3, 6],
-  [0, 4, 8],
-  [1, 4, 7],
-  [2, 5, 8],
-  [2, 4, 6],
-  [3, 4, 5],
-  [6, 7, 8],
+  [0,1,2],
+  [3,4,5],
+  [6,7,8],
+  [0,3,6],
+  [1,4,7],
+  [2,5,8],
+  [0,4,8],
+  [2,4,6]
 ];
 
-const changeTurn = () => (turn === "X" ? "O" : "X");
 
-function checkWin() {
-  wins.forEach(([a, b, c]) => {
-    if (
-      boxTexts[a].innerText &&
-      boxTexts[a].innerText === boxTexts[b].innerText &&
-      boxTexts[b].innerText === boxTexts[c].innerText
-    ) {
-      info.innerText = `${boxTexts[a].innerText} Won 🎉`;
-      gameOver = true;
-      img.style.width = "100px";
-      music.play();
-    }
-  });
+function updateScore(){
+
+    xScore.innerText=x;
+    oScore.innerText=o;
+    drawScore.innerText=draw;
+
 }
 
-boxes.forEach((box) => {
-  box.addEventListener("click", () => {
-    const boxText = box.querySelector(".boxtext");
 
-    if (boxText.innerText || gameOver) return;
+function checkWin(){
 
-    boxText.innerText = turn;
-    audioTurn.play();
+    for(let [a,b,c] of wins){
 
-    checkWin();
+        if(
+            boxTexts[a].innerText &&
+            boxTexts[a].innerText===boxTexts[b].innerText &&
+            boxTexts[b].innerText===boxTexts[c].innerText
+        ){
 
-    if (!gameOver) {
-      turn = changeTurn();
-      info.innerText = `Turn for ${turn}`;
+            gameOver=true;
+
+            info.innerText=`${boxTexts[a].innerText} Won 🎉`;
+
+            img.style.width="150px";
+
+            [a,b,c].forEach(index=>{
+
+                boxes[index].style.background="#22c55e";
+
+            });
+
+            if(boxTexts[a].innerText==="X"){
+
+                x++;
+
+            }else{
+
+                o++;
+
+            }
+
+            updateScore();
+
+            if(soundOn){
+                music.play();
+            }
+
+            return true;
+
+        }
+
     }
-  });
+
+    return false;
+
+}
+
+function checkDraw(){
+
+    const filled=[...boxTexts].every(box=>box.innerText!="");
+
+    if(filled && !gameOver){
+
+        draw++;
+
+        updateScore();
+
+        gameOver=true;
+
+        info.innerText="Match Draw 🤝";
+
+    }
+
+}
+
+
+boxes.forEach((box,index)=>{
+
+    box.addEventListener("click",()=>{
+
+        if(gameOver) return;
+
+        if(boxTexts[index].innerText!="") return;
+
+        boxTexts[index].innerText=turn;
+
+        if(soundOn){
+
+            audioTurn.play();
+
+        }
+
+        if(!checkWin()){
+
+            checkDraw();
+
+        }
+
+        if(!gameOver){
+
+            turn=changeTurn();
+
+            info.innerText=`Turn for ${turn}`;
+
+        }
+
+    });
+
 });
 
-resetBtn.addEventListener("click", () => {
-  boxTexts.forEach((box) => (box.innerText = ""));
 
-  turn = "X";
-  gameOver = false;
 
-  info.innerText = `Turn for ${turn}`;
-  img.style.width = "0";
+resetBtn.addEventListener("click",()=>{
 
-  music.pause();
-  music.currentTime = 0;
+    boxTexts.forEach(box=>{
+
+        box.innerText="";
+
+    });
+
+    boxes.forEach(box=>{
+
+        box.style.background="transparent";
+
+    });
+
+    gameOver=false;
+
+    turn="X";
+
+    info.innerText="Turn for X";
+
+    img.style.width="0";
+
+    music.pause();
+
+    music.currentTime=0;
+
 });
+
+
+
+newGameBtn.addEventListener("click",()=>{
+
+    x=0;
+    o=0;
+    draw=0;
+
+    updateScore();
+
+    resetBtn.click();
+
+});
+
+
+
+
+soundBtn.addEventListener("click",()=>{
+
+    soundOn=!soundOn;
+
+    soundBtn.innerText=soundOn ? "🔊" : "🔇";
+
+});
+
